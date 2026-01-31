@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Shop</title>
+</head>
+
+<body>
+    <h1>Our Products</h1>
+    <div style="display: flex; gap: 20px;">
+        {% for product in products %}
+        <div style="border: 1px solid #ddd; padding: 10px;">
+            <h3>{{ product.name }}</h3>
+            <p>Price: {{ product.price }}</p>
+            <p>Category: {{ product.category.name }}</p>
+        </div>
+        {% empty %}
+        <p>No products available</p>
+        {% endfor %}
+    </div>
+</body>
+
+</html>
