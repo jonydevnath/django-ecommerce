@@ -1,18 +1,19 @@
 from enum import unique
 from django.db import models
+from django.db.models import Q, F
+from django.db.models import Count
 
 # Create your models here.
 class ProductManager(models.Manager):
     def active(self):
         return self.filter(is_active=True)
     def low_stock(self):
-        return self.filter(stock__lt=10)
+        return self.filter(Q(stock__lt=10) | Q(price__gt=F('stock')))
     def in_stock(self):
         return self.filter(stock__gt=0)
 
 class CategoryManager(models.Manager):
     def with_product_count(self):
-        from django.db.models import Count
         return self.annotate(product_count=Count('products'))
 
 class Tag(models.Model):
