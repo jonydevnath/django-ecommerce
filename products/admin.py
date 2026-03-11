@@ -4,7 +4,7 @@ from .models import Category, Product, Tag
 # Register your models here.
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'slug')
+    list_display = ('name', 'slug', 'description')
     prepopulated_fields = {'slug': ('name',)} 
 
 @admin.register(Tag)
@@ -14,7 +14,7 @@ class TagAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('name', 'price', 'stock', 'category', 'is_active')
+    list_display = ('name', 'price', 'discount_price', 'image', 'stock', 'category', 'is_active')
     list_filter = ('is_active', 'category')
     search_fields = ('name','description')
     prepopulated_fields = {'slug': ('name',)}
