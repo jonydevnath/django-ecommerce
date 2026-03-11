@@ -63,6 +63,14 @@ class Order(models.Model):
             self.status = 'confirmed'
             self.save()
 
+            #  Mock payment record
+            Payment.objects.create(
+                order=self,
+                method='card', # default, in real app user selects this 
+                amount=self.total_price,
+                status='completed'  # mock: assume payment succeeds
+            )
+
     def __str__(self):
         return f"Order #{self.id} - {self.status}"
 
@@ -79,3 +87,29 @@ class OrderItem(models.Model):
     @property
     def subtotal(self):
         return self.price * self.quantity
+
+class Payment(models.Model):
+    METHOD_CHOICES = [
+        ('card', 'Credit/Debit Card'),
+        ('cash', 'Cash on Delivery'),
+        ('paypal', 'PayPal'),
+        ('stripe', 'Stripe'),
+    ]
+
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+        ('refunded', 'Refunded'),
+    ]
+
+    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='payment')
+    method = models.CharField(max_length=20, choices=METHOD_CHOICES)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    transaction_id = models.CharField(max_length=100, blank=True)  # From payment gateway
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Payment #{self.id} - {self.order} ({self.status})"
+    
