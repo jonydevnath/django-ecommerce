@@ -57,5 +57,9 @@ class Product(models.Model):
             return self.discount_price
         return self.price
 
+    def can_order(self, quantity):
+        # Check if requested quantity is available in stock.
+        return self.stock >= quantity
+
     def __str__(self):
         return self.name
