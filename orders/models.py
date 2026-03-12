@@ -5,11 +5,17 @@ from django.db import transaction
 from django.db.models import F
 
 # Create your models here.
+class CartManager(models.Manager):
+    def with_items(self):
+        return self.prefetch_related('items__product__category')
+
+
 class Cart(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)  # Allow guest carts
     session_key = models.CharField(max_length=40, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    objects = CartManager()
 
     def __str__(self):
         return f"Cart ({self.user or self.session_key})"
@@ -32,6 +38,18 @@ class CartItem(models.Model):
         return self.product.effective_price * self.quantity
 
 
+class OrderManager(models.Manager):
+    def with_items(self):
+        # Fetch orders with items and products optimized
+        return self.select_related('user').prefetch_related('items__product')
+
+    def pending(self):
+        return self.filter(status='pending')
+
+    def confirmed(self):
+        return self.filter(status='confirmed')
+
+
 class Order(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pending'),
@@ -46,6 +64,7 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    objects = OrderManager()
 
     def place_order(self):
         # Confirm order: validate stock and decrease it. Uses atomic transaction - all or nothing!
