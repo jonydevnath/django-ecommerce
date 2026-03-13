@@ -1,7 +1,5 @@
-from enum import unique
 from django.db import models
-from django.db.models import Q, F
-from django.db.models import Count
+from django.db.models import Q, F, Count
 
 # Create your models here.
 class ProductManager(models.Manager):

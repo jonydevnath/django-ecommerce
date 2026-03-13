@@ -4,9 +4,10 @@ from products.models import Product
 from django.db import transaction
 from django.db.models import F
 
-# Create your models here.
+# In CartManager
 class CartManager(models.Manager):
     def with_items(self):
+        # Prefetch cart items, products, and categories to avoid N+1 queries.
         return self.prefetch_related('items__product__category')
 
 
@@ -23,6 +24,9 @@ class Cart(models.Model):
     @property
     def total(self):
         return sum(item.subtotal for item in self.items.all())
+    
+    class Meta:
+        ordering = ['-created_at']
 
 
 class CartItem(models.Model):
@@ -38,9 +42,10 @@ class CartItem(models.Model):
         return self.product.effective_price * self.quantity
 
 
+# In OrderManager
 class OrderManager(models.Manager):
     def with_items(self):
-        # Fetch orders with items and products optimized
+        # Fetch orders optimized with user and product data.
         return self.select_related('user').prefetch_related('items__product')
 
     def pending(self):
@@ -65,9 +70,10 @@ class Order(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     objects = OrderManager()
-
+    
+    # In Order
     def place_order(self):
-        # Confirm order: validate stock and decrease it. Uses atomic transaction - all or nothing!
+        # Confirm order, validate stock, decrease stock, and create payment. Uses atomic transaction - all or nothing!
         with transaction.atomic():
             for item in self.items.all():
                 product = item.product
@@ -93,6 +99,9 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Order #{self.id} - {self.status}"
+    
+    class Meta:
+        ordering = ['-created_at']
 
 
 class OrderItem(models.Model):
@@ -107,6 +116,7 @@ class OrderItem(models.Model):
     @property
     def subtotal(self):
         return self.price * self.quantity
+
 
 class Payment(models.Model):
     METHOD_CHOICES = [
